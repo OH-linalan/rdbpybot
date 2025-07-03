@@ -20,7 +20,9 @@ intents.guilds = True
 intents.members = True
 
 bot = commands.Bot(command_prefix='!', intents=intents)
-tree = bot.tree  # bot 내부 command tree 사용
+tree = bot.tree
+
+synced = False  # ✅ 슬래시 명령어 sync 중복 방지용
 
 def load_data():
     if os.path.exists(DATA_FILE):
@@ -39,7 +41,10 @@ problem_data = {
 
 @bot.event
 async def on_ready():
-    await bot.tree.sync(guild=discord.Object(id=GUILD_ID))
+    global synced
+    if not synced:
+        await bot.tree.sync(guild=discord.Object(id=GUILD_ID))
+        synced = True
     print(f'✅ Logged in as {bot.user}')
 
 @tree.command(name='rdf', description='오늘의 문제를 등록합니다.', guild=discord.Object(id=GUILD_ID))
