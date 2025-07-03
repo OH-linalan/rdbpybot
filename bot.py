@@ -20,7 +20,7 @@ intents.guilds = True
 intents.members = True
 
 bot = commands.Bot(command_prefix='!', intents=intents)
-tree = app_commands.CommandTree(bot)
+tree = bot.tree  # bot 내부 command tree 사용
 
 def load_data():
     if os.path.exists(DATA_FILE):
@@ -39,7 +39,7 @@ problem_data = {
 
 @bot.event
 async def on_ready():
-    await tree.sync(guild=discord.Object(id=GUILD_ID))
+    await bot.tree.sync(guild=discord.Object(id=GUILD_ID))
     print(f'✅ Logged in as {bot.user}')
 
 @tree.command(name='rdf', description='오늘의 문제를 등록합니다.', guild=discord.Object(id=GUILD_ID))
@@ -50,7 +50,7 @@ async def rdf_command(interaction: discord.Interaction, link: str):
         return
 
     today = datetime.date.today().isoformat()
-    msg = await interaction.channel.send(f"@everyone 오늘의 알고리즘 문제입니다!\n{link}\n:O: 이모지를 눌러주세요!")
+    msg = await interaction.channel.send(f"@everyone 오늘의 알고리즘 문제입니다!\n{link}\n🅾️ 이모지를 눌러주세요!")
     await msg.add_reaction("🅾️")
 
     problem_data['message_id'] = msg.id
