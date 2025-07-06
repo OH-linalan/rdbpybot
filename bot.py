@@ -39,6 +39,9 @@ problem_data = {
     'date': None
 }
 
+def is_admin(interaction: discord.Interaction) -> bool:
+    return interaction.user.guild_permissions.administrator
+
 @bot.event
 async def on_ready():
     global synced
@@ -93,6 +96,36 @@ async def plot_command(interaction: discord.Interaction):
         msg += f"{i}. {name} — 🛡️ {count}회, 🔥 {streak}일 연속\n"
 
     await interaction.response.send_message(msg)
+
+@tree.command(name='edit_stat', description='(관리자 전용) 유저의 스탯을 수정합니다.', guild=discord.Object(id=GUILD_ID))
+@app_commands.describe(user='수정할 유저', count='디펜스 횟수', streak='연속 성공 일수')
+async def edit_stat_command(interaction: discord.Interaction, user: discord.Member, count: int, streak: int):
+    if not is_admin(interaction):
+        await interaction.response.send_message("❌ 이 명령어는 관리자만 사용할 수 있습니다.", ephemeral=True)
+        return
+
+    data = load_data()
+    uid = str(user.id)
+    data[uid] = {
+        'count': count,
+        'streak': streak,
+        'last_date': datetime.date.today().isoformat()
+    }
+    save_data(data)
+
+    await interaction.response.send_message(f"✅ {user.display_name} 님의 스탯이 수정되었습니다.", ephemeral=True)
+
+@tree.command(name='download_data', description='(관리자 전용) 데이터 파일(json)을 다운로드합니다.', guild=discord.Object(id=GUILD_ID))
+async def download_data_command(interaction: discord.Interaction):
+    if not is_admin(interaction):
+        await interaction.response.send_message("❌ 이 명령어는 관리자만 사용할 수 있습니다.", ephemeral=True)
+        return
+
+    if not os.path.exists(DATA_FILE):
+        await interaction.response.send_message("❌ 데이터 파일이 존재하지 않습니다.", ephemeral=True)
+        return
+
+    await interaction.response.send_message("📦 데이터 파일을 첨부합니다.", ephemeral=True, file=discord.File(DATA_FILE))
 
 @bot.event
 async def on_raw_reaction_add(payload):
