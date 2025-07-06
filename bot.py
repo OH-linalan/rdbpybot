@@ -82,6 +82,8 @@ async def stat_command(interaction: discord.Interaction):
 
 @tree.command(name='plot', description='전체 순위표를 확인합니다.', guild=discord.Object(id=GUILD_ID))
 async def plot_command(interaction: discord.Interaction):
+    await interaction.response.defer(ephemeral=True)  # ✅ 먼저 응답을 연기합니다.
+
     data = load_data()
     members = []
     for uid, val in data.items():
@@ -95,7 +97,8 @@ async def plot_command(interaction: discord.Interaction):
     for i, (name, count, streak) in enumerate(members[:10], 1):
         msg += f"{i}. {name} — 🛡️ {count}회, 🔥 {streak}일 연속\n"
 
-    await interaction.response.send_message(msg)
+    # ✅ 연기된 응답으로 메시지 전송
+    await interaction.followup.send(msg, ephemeral=True)
 
 @tree.command(name='edit_stat', description='(관리자 전용) 유저의 스탯을 수정합니다.', guild=discord.Object(id=GUILD_ID))
 @app_commands.describe(user='수정할 유저', count='디펜스 횟수', streak='연속 성공 일수')
